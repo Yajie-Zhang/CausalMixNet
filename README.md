@@ -7,7 +7,7 @@ Please prepare the data as described in the following link: [https://www.science
 
 How to run
 ---
-python main_bracs.py --device cuda:0 --dataset bracs
+python main.py --data he --source_domains APT --device cuda:0 --algorithm resnet18-MIX-SP --K 5 --ratio 0.8 --alpha 5.0 --beta 3.0 --N_Times 20 --batch_size 16
 
 Citation
 ---
