@@ -280,7 +280,7 @@ def main(args):
     writer = init_log(args, log_path, len(train_loader), dataset_size)
 
     train(train_loader, val_loader, test_loader, args, writer)
-    os.mknod(os.path.join(log_path, 'done'))
+    # os.mknod(os.path.join(log_path, 'done'))
     writer.close()
 
 
