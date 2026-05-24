@@ -101,11 +101,6 @@ def train(train_loader,val_loader,domain1_loader,args,writer):
     # path = torch.load('./result/resnet18_he_APT_best_model.pth', map_location=device)
     # model.load_state_dict(path, strict=False)
     model.to(device)
-    if args.data == 'he':
-        val_multi_acc, val_multi_f1, val_by_acc, val_by_pr, val_by_rc, val_by_f1 = algorithm_validate_he(
-            model, val_loader, 0 ,'val', device, writer=writer)
-        val_multi_acc, _, _, _, _, _ = algorithm_validate_he(model, domain1_loader, 0, 'test',
-                                                             device, writer=writer)
 
     # state_dict = model.state_dict()
     # model = resnet_ex_sp.Model(args.num_classes, mode=args.mode, class_att=class_att_var)
