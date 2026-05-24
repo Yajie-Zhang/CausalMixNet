@@ -153,7 +153,7 @@ def train(train_loader,val_loader,domain1_loader,args,writer):
                             model, val_loader, epoch, 'val', device,writer=writer)
                         _, _, _, _, _, _ = algorithm_validate_he(model, domain1_loader, epoch, 'test',
                                                                              device,writer=writer)
-                        if (val_multi_acc+val_multi_f1+val_by_acc+val_by_pr+val_by_rc+val_by_f1) > best_val_auc:
+                        if (val_multi_acc+val_multi_f1) > best_val_auc:
                             if epoch>10:
                                 best_val_auc = val_multi_acc + val_multi_f1
                                 torch.save(model.state_dict(), args.save_path)
@@ -293,4 +293,4 @@ if __name__ == '__main__':
     end_train = time.time()
     print('Training time in: %s' % ((end_train - start_train) / 3600))
 
-    # python main_bracs.py --data he --source_domains APT --device cuda:9 --algorithm resnet18-MIX-SP --K 5 --ratio 0.8 --alpha 5.0 --N_Times 20
+    # python main_bracs.py --data he --source_domains APT --device cuda:9 --algorithm resnet18-MIX-SP --K 5 --ratio 0.8 --alpha 5.0 --beta 3.0 --N_Times 20
