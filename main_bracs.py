@@ -293,4 +293,4 @@ if __name__ == '__main__':
     end_train = time.time()
     print('Training time in: %s' % ((end_train - start_train) / 3600))
 
-    # python main_bracs.py --data he --source_domains APT --device cuda:9 --algorithm resnet18-MIX-SP --K 5 --ratio 0.8 --alpha 5.0 --beta 3.0 --N_Times 20
+    # python main_bracs.py --data he --source_domains APT --device cuda:0 --algorithm resnet18-MIX-SP --K 5 --ratio 0.8 --alpha 5.0 --beta 3.0 --N_Times 20 --batch_size 16
