@@ -83,8 +83,8 @@ def get_args_parser():
     parser.add_argument('--test_iter',type=int)
     parser.add_argument('--K',default=5,type=int)
     parser.add_argument('--ratio',default=0.8,type=float)
-    parser.add_argument('--alpha',default=0.2,type=float)
-    parser.add_argument('--beta',default=0.0,type=float)
+    parser.add_argument('--alpha',default=5.0,type=float)
+    parser.add_argument('--beta',default=3.0,type=float)
     return parser
 
 
@@ -293,4 +293,4 @@ if __name__ == '__main__':
     end_train = time.time()
     print('Training time in: %s' % ((end_train - start_train) / 3600))
 
-    # python main_bracs.py --data he --source_domains APT --device cuda:9 --algorithm resnet18-MIX-SP --K 5 --ratio 0.8 --alpha 0.2 --N_Times 20
+    # python main_bracs.py --data he --source_domains APT --device cuda:9 --algorithm resnet18-MIX-SP --K 5 --ratio 0.8 --alpha 5.0 --N_Times 20
