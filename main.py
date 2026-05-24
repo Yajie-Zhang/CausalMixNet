@@ -50,7 +50,7 @@ def get_args_parser():
     # Model params
 
     parser.add_argument('--img_size', default=256)
-    parser.add_argument('--batch_size', default=32, type=int,
+    parser.add_argument('--batch_size', default=16, type=int,
                         help='Batch size per GPU (effective batch size is batch_size * accum_iter * # gpus')
     parser.add_argument('--epoch', default=30, type=int)
     parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',
@@ -153,7 +153,7 @@ def train(train_loader,val_loader,domain1_loader,args,writer):
                             model, val_loader, epoch, 'val', device,writer=writer)
                         _, _, _, _, _, _ = algorithm_validate_he(model, domain1_loader, epoch, 'test',
                                                                              device,writer=writer)
-                        if (val_multi_acc+val_multi_f1+val_by_acc+val_by_pr+val_by_rc+val_by_f1) > best_val_auc:
+                        if (val_multi_acc+val_multi_f1) > best_val_auc:
                             if epoch>10:
                                 best_val_auc = val_multi_acc + val_multi_f1
                                 torch.save(model.state_dict(), args.save_path)
