@@ -61,7 +61,7 @@ def get_args_parser():
 
     parser.add_argument('--device', default='cpu',
                         help='device to use for training / testing')
-    parser.add_argument('--seed', default=100, type=int)
+    parser.add_argument('--seed', default=1993, type=int)
     parser.add_argument('--num_workers', default=10, type=int)
     parser.add_argument('--dataset', default='OCT_data', type=str)  
     parser.add_argument('--num_classes', type=int)
