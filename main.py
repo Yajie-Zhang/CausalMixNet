@@ -61,7 +61,7 @@ def get_args_parser():
 
     parser.add_argument('--device', default='cpu',
                         help='device to use for training / testing')
-    parser.add_argument('--seed', default=0, type=int)
+    parser.add_argument('--seed', default=100, type=int)
     parser.add_argument('--num_workers', default=10, type=int)
     parser.add_argument('--dataset', default='OCT_data', type=str)  
     parser.add_argument('--num_classes', type=int)
@@ -174,7 +174,7 @@ def main(args):
             test_dir = './data/OCT/ddr_test.txt'
             args.root = '...'
 
-            args.test_iter=100
+            args.test_iter=300
             train_=read_txt(train_dir)
             val_=read_txt(val_dir)
             test_=read_txt(test_dir)
