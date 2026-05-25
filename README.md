@@ -7,7 +7,7 @@ Please prepare the data as described in the following link: [https://www.science
 
 How to run
 ---
-python main.py --data dataset_name --device cuda:0 --algorithm resnet18-MIX-SP --K 5 --alpha ALPHA --beta BETA --N_Times 20 --batch_size BS
+python main.py --data dataset_name --device cuda:0 --algorithm resnet18-MIX-SP --K 5 --alpha ALPHA --beta BETA --batch_size BS
 
 Citation
 ---
