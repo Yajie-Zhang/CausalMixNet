@@ -16,7 +16,14 @@ How to run
 For the DDR dataset:
 ```bash
 python main_oct_ddr.py --data covid --source_domains DDR --device cuda:1 --algorithm resnet18-MIX-SP --K 5 --ratio 0.8 --alpha 0.5 --beta 1.0 --N_Times 20 --batch_size 64 --lr 0.0001
+```
+
+For the BRACS dataset:
 ```bash
+python main_bracs.py --data he --source_domains APT --algorithm resnet18-MIX-SP --K 5 --ratio 0.8 --alpha 5.0 --beta 3.0 --N_Times 20 --device cuda:0 --batch_size 16 --lr 0.0001
+
+python main_bracs_binary.py --data he --source_domains APT --algorithm resnet18-MIX-SP --K 5 --ratio 0.8 --alpha 5.0 --beta 3.0 --N_Times 20 --device cuda:0 --batch_size 16 --lr 0.0001
+```
 
 Citation
 ---
