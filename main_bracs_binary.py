@@ -1,0 +1,201 @@
+# The baseline implementation of resnet, alexnet, vit, and resnet_attention
+
+import argparse
+import os
+import time
+
+import torch
+import torch.nn as nn
+import torch.backends.cudnn as cudnn
+from torchvision import models as torchvision_models
+import numpy as np
+from scipy.linalg import hadamard
+
+from utils.validate_ex import algorithm_validate_he_binary
+
+from models import resnet_ex_sp
+from utils.dataloader import HE_DATASET
+from utils.fix_seeds import fix_random_seeds
+from utils.logger import *
+
+import warnings
+
+warnings.filterwarnings('ignore')
+
+torchvision_archs = sorted(name for name in torchvision_models.__dict__
+                           if name.islower() and not name.startswith("__")
+                           and callable(torchvision_models.__dict__[name]))
+
+model_names = ['main_vit_tiny', 'main_vit_base'] + torchvision_archs
+
+
+def get_args_parser():
+    parser = argparse.ArgumentParser('CausalMixNet', add_help=False)
+
+    # Model params
+
+    parser.add_argument('--img_size', default=256)
+    parser.add_argument('--batch_size', default=16, type=int,
+                        help='Batch size per GPU (effective batch size is batch_size * accum_iter * # gpus')
+    parser.add_argument('--epoch', default=30, type=int)
+    parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',
+                        help='learning rate (absolute lr)')
+    parser.add_argument('--weight_decay', type=float, default=0.05,
+                        help='weight decay (default: 0.05)')
+
+    parser.add_argument('--device', default='cpu',
+                        help='device to use for training / testing')
+    parser.add_argument('--seed', default=1993, type=int)  # [1993, 100]
+    parser.add_argument('--num_workers', default=10, type=int)
+    parser.add_argument('--dataset', default='xray', type=str)  # COVID ot BreakHis
+    parser.add_argument('--num_classes', type=int)
+    parser.add_argument('--job_id', default=0)
+    parser.add_argument('--model', default='resnet_attribute', type=str)
+    parser.add_argument('--cv', default=5, type=int)
+    parser.add_argument('--ce', default=True, type=bool)
+    parser.add_argument('--aa', default=True, type=bool)
+    parser.add_argument('--ra', default=True, type=bool)
+    parser.add_argument('--mode', default='multi_cls', type=str)
+    parser.add_argument('--num_att', default=6, type=int)
+    parser.add_argument('--kl_weight', default=1.0, type=float)
+    parser.add_argument('--ce2_weight', default=0.5, type=float)
+    parser.add_argument('--data',default='he',type=str)
+    parser.add_argument('--name',type=str)
+    parser.add_argument('--algorithm',default='resnet18',type=str)
+    parser.add_argument('--source_domains',default='APT',type=str)
+    parser.add_argument('--is_HE',default=None,type=bool)
+    parser.add_argument('--N_Times',default=20,type=int)
+    parser.add_argument('--test_iter',type=int)
+    parser.add_argument('--K',default=5,type=int)
+    parser.add_argument('--ratio',default=0.8,type=float)
+    parser.add_argument('--alpha',default=5.0,type=float)
+    parser.add_argument('--beta',default=3.0,type=float)
+    return parser
+
+
+def read_txt(List):
+    all = []
+    for line in open(List, encoding='utf-8'):
+        # line.replace('\n','.jpg\n')
+        all.append(line)
+    return all
+
+def BRACS_label_transfer(label):
+    label[label < 3] = 0
+    label[label > 0] = 1
+    return label
+
+def train(train_loader,val_loader,domain1_loader,args,writer):
+    device = torch.device(args.device)
+    model = resnet_ex_sp.ModelBinary(args.num_classes, mode=args.mode,K=args.K)
+    model.to(device)
+    criterion = torch.nn.CrossEntropyLoss()
+    parameters = model.parameters()
+    optimizer = torch.optim.SGD(parameters, lr=args.lr, momentum=0.9, weight_decay=args.weight_decay)
+
+    iter_num = 0
+    best_val_auc=0
+    for epoch in range(args.epoch):
+        loss = 0.0
+        # print(epoch)
+        for i, (index, img, label) in enumerate(train_loader):
+            model.train()
+            img = img.to(device)
+            if label.shape[0]<2:
+                pass
+            else:
+                B=img.shape[0]
+                label = label.to(device)
+                label_oh = torch.tensor(np.eye(args.num_classes, dtype=np.uint8)[label.cpu().numpy()]).float().to(
+                    label.device)
+                optimizer.zero_grad()
+                binary_label=BRACS_label_transfer(label.clone().detach())
+                x_sim, x, y, maskX, maskY, exX, exY, y_multi, multi_ex_y, multi_sim_y = model(img, None, label_oh)
+
+                loss = criterion(y, binary_label)# + args.beta * criterion(exY, binary_label) + args.alpha * criterion(maskY, binary_label)
+                multi_loss=criterion(y_multi, label) + args.beta * criterion(multi_ex_y,label) + args.alpha * criterion(multi_sim_y, label)
+                raw_loss = loss+multi_loss
+
+                total_loss = raw_loss
+                total_loss.backward()
+                optimizer.step()
+
+                if iter_num % args.test_iter == 0:
+                    if args.data == 'he':
+                        val_by_acc, val_by_pr, val_by_rc, val_by_f1 = algorithm_validate_he_binary(
+                            model, val_loader, epoch, 'val', device,writer=writer)
+                        if (val_by_acc+val_by_pr+val_by_rc+val_by_f1) >= best_val_auc:
+                            if epoch>10:
+                                best_val_auc = val_by_acc+val_by_pr+val_by_rc+val_by_f1
+                                test_by_acc, test_by_pr, test_by_rc, test_by_f1 = algorithm_validate_he_binary(model, domain1_loader, epoch, 'test',
+                                                                             device,writer=writer)
+                                print("==============The test results are ", test_by_acc, " ", test_by_pr, " ", test_by_rc, " ", test_by_f1,"==============")
+                                # torch.save(model.state_dict(), args.save_path)
+
+                iter_num = iter_num + 1
+    if args.data == 'he':
+        val_by_acc, val_by_pr, val_by_rc, val_by_f1 = algorithm_validate_he_binary(model,val_loader,epoch, 'val',device,args.save_path,writer=writer)
+        _, _, _, _ = algorithm_validate_he_binary(model, domain1_loader, epoch, 'test', device,args.save_path,writer=writer )
+
+def main(args):
+    fix_random_seeds(args.seed)
+
+    print('job dir: {}'.format(os.path.dirname(os.path.realpath(__file__))))
+    # print("{}".format(args).replace(', ', ',\n'))
+
+    cudnn.benchmark = True
+
+    if args.data == 'he':
+        train_dir = './data/HE_breast/BRACS/BRACS_TRAIN.txt'
+        val_dir = './data/HE_breast/BRACS/BRACS_VAL.txt'
+        test_dir = './data/HE_breast/BRACS/BRACS_TEST.txt'
+        args.root = '/datasets_hdd2/yjzhang/data/BRACS_breast/BRACS_RoI/latest_version'
+        train_=read_txt(train_dir)
+        val_=read_txt(val_dir)
+        test_=read_txt(test_dir)
+        args.test_iter=50
+        args.is_HE = True
+        args.num_classes = 5
+
+        dataset_train = HE_DATASET(args.root, train_, args.img_size, is_train=True, is_HE=args.is_HE)
+        print(f"Train data loaded: there are {len(dataset_train)} images.")
+
+        dataset_val = HE_DATASET(args.root, val_, args.img_size, is_train=False, is_HE=args.is_HE)
+        print(f"Val data loaded: there are {len(dataset_val)} images.")
+
+        dataset_test = HE_DATASET(args.root, test_, args.img_size, is_train=False, is_HE=args.is_HE)
+        print(f"Domain1 data loaded: there are {len(dataset_test)} images.")
+
+        train_loader = torch.utils.data.DataLoader(dataset_train, batch_size=args.batch_size, shuffle=True,
+                                                   num_workers=args.num_workers, drop_last=False)
+        val_loader = torch.utils.data.DataLoader(dataset_val, batch_size=args.batch_size, shuffle=False,
+                                                 num_workers=args.num_workers, drop_last=False)
+        test_loader = torch.utils.data.DataLoader(dataset_test, batch_size=args.batch_size, shuffle=False,
+                                                  num_workers=args.num_workers, drop_last=False)
+
+    if args.data=='covid':
+        args.save_path='./result/'+args.algorithm+'_oct_'+args.source_domains
+    else:
+        args.save_path = './result/' + args.algorithm + '_'+args.data+'_' + args.source_domains+'_'+str(args.alpha)+str(args.beta)
+    args.save_path=args.save_path+'_best_model.pth'
+
+    print(args)
+
+    log_path = './logger'
+    dataset_size = [len(train_), len(val_), len(test_)]
+    writer = init_log(args, log_path, len(train_loader), dataset_size)
+
+    train(train_loader, val_loader, test_loader, args, writer)
+    writer.close()
+
+
+if __name__ == '__main__':
+    args = get_args_parser()
+    args = args.parse_args()
+    # print(args)
+    start_train = time.time()
+    main(args)
+    end_train = time.time()
+    print('Training time in: %s' % ((end_train - start_train) / 3600))
+
+    # python main_bracs_binary.py --data he --source_domains APT --algorithm resnet18-MIX-SP --K 5 --ratio 0.8 --alpha 5.0 --beta 3.0 --N_Times 20 --device cuda:0
