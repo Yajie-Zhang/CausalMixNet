@@ -34,6 +34,10 @@ For the NIH dataset:
 python main_xray.py --data covid --source_domains APT --algorithm resnet18-MIX-SP --K 5 --ratio 0.8 --alpha 5.0 --beta 5.0 --N_Times 20 --device cuda:1 --batch_size 32 --lr 0.0001
 ```
 
+Environment Requirements
+---
+PyTorch 2.10.0 + CUDA 12.6, Torchvision 0.25.0
+
 Citation
 ---
 @article{zhang2025causalmixnet,  <br>
