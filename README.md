@@ -21,8 +21,17 @@ python main_oct_ddr.py --data covid --source_domains DDR --device cuda:1 --algor
 For the BRACS dataset:
 ```bash
 python main_bracs.py --data he --source_domains APT --algorithm resnet18-MIX-SP --K 5 --ratio 0.8 --alpha 5.0 --beta 3.0 --N_Times 20 --device cuda:0 --batch_size 16 --lr 0.0001
-
 python main_bracs_binary.py --data he --source_domains APT --algorithm resnet18-MIX-SP --K 5 --ratio 0.8 --alpha 5.0 --beta 3.0 --N_Times 20 --device cuda:0 --batch_size 16 --lr 0.0001
+```
+
+For the CUB dataset:
+```bash
+python main_cub.py --data cub --source_domains APT --device cuda:6 --algorithm resnet18-MIX-SP --K 3 --ratio 0.8 --alpha 5.0 --beta 5.0 --N_Times 0 --batch_size 128 --lr 0.001
+```
+
+For the NIH dataset:
+```bash
+python main_xray.py --data covid --source_domains APT --algorithm resnet18-MIX-SP --K 5 --ratio 0.8 --alpha 5.0 --beta 5.0 --N_Times 20 --device cuda:1 --batch_size 32 --lr 0.0001
 ```
 
 Citation
