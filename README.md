@@ -8,7 +8,7 @@ DDR: https://www.kaggle.com/datasets/mariaherrerot/ddrdataset <br>
 APTOS: https://www.kaggle.com/competitions/aptos2019-blindness-detection <br>
 FGADR: https://csyizhou.github.io/FGADR/ <br>
 NIH dataset: https://www.kaggle.com/datasets/nih-chest-xrays/data <br>
-CUB-200-2011: [link：](https://www.kaggle.com/datasets/wenewone/cub2002011) <br>
+CUB-200-2011: https://www.kaggle.com/datasets/wenewone/cub2002011 <br>
 Please prepare the data as described in the following link: [https://www.sciencedirect.com/science/article/pii/S1361841525001288](https://www.sciencedirect.com/science/article/pii/S1361841525001288). <br>
 
 How to run
