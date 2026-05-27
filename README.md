@@ -16,6 +16,7 @@ How to run
 For the DDR dataset:
 ```bash
 python main_oct_ddr.py --data covid --source_domains DDR --device cuda:1 --algorithm resnet18-MIX-SP --K 5 --ratio 0.8 --alpha 0.5 --beta 1.0 --N_Times 20 --batch_size 64 --lr 0.0001
+```bash
 
 Citation
 ---
